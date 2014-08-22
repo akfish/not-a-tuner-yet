@@ -16,3 +16,6 @@ define (require, exports, module) ->
   $(document).ready ->
     $("#show-content").click ->
       scroll_to '#content', true
+
+    Visualizer = require './visualizer'
+    vis = new Visualizer($("#wave canvas"))

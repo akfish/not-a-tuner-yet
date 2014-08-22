@@ -1,0 +1,71 @@
+// Color schems
+@c0: #FDFDFD;
+@c1: #D06503;
+@c2: #E9931A;
+@c3: #1691BE;
+@c4: #166BA2;
+@c5: #1B3647;
+@c6: #1B3647;
+// Text colors
+@text-color-bold:   #89867e;
+@text-color-light:  #ceccc6;
+@text-color-invert: #f2f2f2;
+// Consts
+@phi: 0.618;
+
+html, body {
+  overflow: hidden;
+  padding: 0px;
+  margin: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: @c5;
+}
+
+// @width must be percentage
+.circle(@width) {
+    width: percentage(@width);
+    height:0;
+    padding-bottom: percentage(@width);
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+}
+
+.semi-circle-at-bottom-center(@width) {
+  position: absolute;
+  bottom: percentage(-@width);
+  left: percentage((1 - @width) / 2);
+  .circle(@width);
+}
+
+.drop-shadow (@x: 0, @y: 1px, @blur: 2px, @spread: 0, @alpha: 0.25) {
+	-webkit-box-shadow:	@x @y @blur @spread rgba(0, 0, 0, @alpha);
+	-moz-box-shadow:	@x @y @blur @spread rgba(0, 0, 0, @alpha);
+	box-shadow:		@x @y @blur @spread rgba(0, 0, 0, @alpha);
+}
+
+#visualizer {
+  position: absolute;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  #outer-circle {
+    .semi-circle-at-bottom-center((1 - @phi) * @phi + @phi);
+    background-color: @c4;
+  }
+  #inner-circle {
+    .drop-shadow(@spread: 1px, @blur: 10px);
+    .semi-circle-at-bottom-center(@phi);
+    background-color: @c3;
+  }
+}
+
+#content {
+  position: absolute;
+  width: 100%;
+  top: 100%;
+  min-height: 100%;
+  background-color: @c0;
+  opacity: 0.3;
+}

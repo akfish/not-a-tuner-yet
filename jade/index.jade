@@ -1,0 +1,15 @@
+doctype html
+html
+  head
+    meta(http-equiv='Content-Type', content='text/html; charset=utf-8')
+    title CatX Tuner
+  body
+    script(src='sea-modules/seajs/2.3.0/dist/sea-debug.js')
+    script(src='sea-modules/jquery/2.1.1/jquery.js')
+    script(src='sea-modules/underscore/1.6.0/underscore.js')
+    script(src='sea-modules/animatescroll.js/upstream/animatescroll.js')
+    script(src='script/loader.js')
+
+    script.
+      // App Entry
+      seajs.use('/script/main');

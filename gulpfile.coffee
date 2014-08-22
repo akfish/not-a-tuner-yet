@@ -18,7 +18,7 @@ module_root    = './modules/'
 modules = []#['seajs-preload']
 
 # Config
-#config = require './config'
+config = require './config'
 
 # Sources
 coffee_src    = './coffee/**/*.coffee'

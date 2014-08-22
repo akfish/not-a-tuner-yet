@@ -1,0 +1,12 @@
+[submodule "upstream-modules/seajs/upstream"]
+	path = upstream-modules/seajs/upstream
+	url = https://github.com/seajs/seajs.git
+[submodule "upstream-modules/seajs-css/upstream"]
+	path = upstream-modules/seajs-css/upstream
+	url = https://github.com/seajs/seajs-css.git
+[submodule "upstream-modules/q/upstream"]
+	path = upstream-modules/q/upstream
+	url = https://github.com/kriskowal/q.git
+[submodule "upstream-modules/animatescroll.js/upstream"]
+	path = upstream-modules/animatescroll.js/upstream
+	url = https://github.com/ramswaroop/animatescroll.js.git

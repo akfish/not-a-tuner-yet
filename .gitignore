@@ -1,0 +1,9 @@
+node_modules/
+sea-modules/
+.idea/
+*~
+publish/
+config.json
+!static/sea-modules/
+!static/*
+!coffee/config.json

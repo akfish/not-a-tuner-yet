@@ -30,13 +30,14 @@ upstream_src  = './upstream-modules/**/*.*'
 
 # Ignore
 git_dir       = '.git/**/*.*'
+test_dir      = '**/test/**/*.*'
 
 publish_to = (folder) ->
 	path.join publish_root, folder
 
 copy = (from, to) ->
 	gulp.src from
-		.pipe ignore.exclude git_dir
+		.pipe ignore.exclude [git_dir, test_dir]
 		.pipe gulp.dest to
 
 deploy_static = ->

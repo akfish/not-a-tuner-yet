@@ -10,3 +10,6 @@
 [submodule "upstream-modules/animatescroll.js/upstream"]
 	path = upstream-modules/animatescroll.js/upstream
 	url = https://github.com/ramswaroop/animatescroll.js.git
+[submodule "upstream-modules/processing-js/upstream"]
+	path = upstream-modules/processing-js/upstream
+	url = https://github.com/processing-js/processing-js

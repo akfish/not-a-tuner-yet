@@ -17,5 +17,8 @@ define (require, exports, module) ->
     $("#show-content").click ->
       scroll_to '#content', true
 
+    canvas = $("#wave canvas")
+    outer_circle = $("#outer-circle")
+    inner_circle = $("#inner-circle")
     Visualizer = require './visualizer'
-    vis = new Visualizer($("#wave canvas"))
+    vis = new Visualizer(canvas, inner_circle, outer_circle)

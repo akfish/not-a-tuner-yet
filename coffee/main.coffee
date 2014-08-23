@@ -14,6 +14,12 @@ define (require, exports, module) ->
     scroll_to window.location.hash
 
   $(document).ready ->
+    Processor = require './processor'
+    console.log Processor.is_valid()
+
+    processor = new Processor()
+    processor.use_audio "/audio/nocturne_with_no_moon.mp3"
+
     $("#show-content").click ->
       scroll_to '#content', true
 
@@ -22,3 +28,4 @@ define (require, exports, module) ->
     inner_circle = $("#inner-circle")
     Visualizer = require './visualizer'
     vis = new Visualizer(canvas, inner_circle, outer_circle)
+    vis.bind processor

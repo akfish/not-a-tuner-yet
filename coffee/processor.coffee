@@ -25,6 +25,7 @@ define (require, exports, module) ->
           that.source.buffer = b
           that.source.loop = true
           that.source.start 0.0
+          that.ready = true
           ), (err) ->
             console.error("Fail to load audio: #{url}")
       xhr.open "GET", url, true
@@ -33,8 +34,8 @@ define (require, exports, module) ->
     use_mic: ->
 
     _process: ->
-      n = @analyser.frequencyBinCount
-      arr = new Uint8Array(n)
+      @frequency_bin_count = n = @analyser.frequencyBinCount
+      @frequency_bins = arr = new Uint8Array(n)
       @analyser.getByteFrequencyData arr
       @volume = _.reduce arr, ((sum, i) -> sum + i), 0
       @volume /= n
@@ -51,5 +52,7 @@ define (require, exports, module) ->
       @node.onaudioprocess = @_process.bind(@)
       @node.connect @context.destination
       @analyser.connect @node
+
+      @ready = false
 
   module.exports = Processor

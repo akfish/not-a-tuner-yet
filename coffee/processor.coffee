@@ -1,6 +1,6 @@
 define (require, exports, module) ->
   default_opts =
-    fft_size: 1024
+    fft_size: 2048
     smoothing_time_const: 0.3
     buffer_size: 2048
 

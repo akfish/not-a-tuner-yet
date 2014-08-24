@@ -12,12 +12,38 @@ define (require, exports, module) ->
             delta = v.processor.volume * 20
           return delta
 
+        get_spectrum = ->
+          if not v.processor or not v.processor.ready
+            return _.map([0..1024 - 1], (n) -> (1 + p.sin(n + p.frameCount)) / 2 * 255)
+          else
+            return v.processor.frequency_bins
+
         draw_circle = (color, alpha, delta) ->
           p.noFill()
           p.stroke p.color(color, alpha)
           p.ellipse v.outer_left + v.outer_size / 2,
             v.outer_top + v.outer_size / 2,
             v.outer_size + delta, v.outer_size + delta
+
+        calculate_bin_centers = (bins) ->
+          # Cached
+          cx = v.outer_left + v.outer_size / 2
+          cy = v.outer_top + v.outer_size / 2
+          base_radius = v.inner_size / 2
+          max_len = (v.outer_size - v.inner_size)# / 2
+          arc_step = Math.PI / bins.length
+          bin_centers = []
+          for bin, i in bins
+            len = max_len * bin / 255
+            r = base_radius + len / 2# + max_len / 2
+            theta = i * arc_step + Math.PI
+            x = cx + p.cos(theta) * r
+            y = cy + p.sin(theta) * r
+            bin_centers.push
+              x: x
+              y: y
+              t: theta
+          return bin_centers
 
         visualize_volume = ->
           volume = get_volume()
@@ -28,6 +54,26 @@ define (require, exports, module) ->
             draw_circle colors[0], i * 0.1, vol
           draw_circle colors[4], 255, volume
 
+        visualize_spectrum = ->
+          bins = get_spectrum()
+          centers = calculate_bin_centers bins
+          max_len = (v.outer_size - v.inner_size) / 2
+          w = v.inner_size * Math.PI / 2 / bins.length
+          color = p.color colors[0], 128
+          p.fill color
+          p.stroke color
+          for c, i in centers
+            bin = bins[i]
+            len = max_len / 255 * bin
+            if len < 1
+              continue
+            p.pushMatrix()
+            p.translate c.x, c.y
+            p.rotate Math.PI / 2 + c.t
+            p.translate -c.x, -c.y
+            p.rect c.x, c.y, w, len
+            p.popMatrix()
+
         p.setup = ->
           p.size v.$el.width(), v.$el.height()
           p.frameRate 60
@@ -37,6 +83,7 @@ define (require, exports, module) ->
           p.background 0, 0
           p.smooth()
           visualize_volume()
+          visualize_spectrum()
         return
 
     constructor: (@$el, @inner_circle, @outer_circle) ->

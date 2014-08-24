@@ -1,18 +1,60 @@
 define (require, exports, module) ->
   colors = require './colors'
   console.log colors
+  class KernelCache
+    constructor: (@min_spread = 5, @clamp = 0.03) ->
+      @cache = {}
+
+    _calc_kernel: (alpha) ->
+      sigma_square = 100.0 + alpha
+      K = []
+      a = 1 / Math.sqrt(2 * Math.PI * sigma_square)
+      b = -1 / 2 / sigma_square
+      i = 0
+      while true
+        k = a * Math.exp(i * i * b)
+        #console.log k
+        if i > @min_spread and k < @clamp
+          break
+        K.push k
+        i++
+      return K
+
+    get: (alpha) ->
+      if alpha in @cache
+        return @cache[alpha]
+      kernel = @_calc_kernel alpha
+      @cache[alpha] = kernel
+      return kernel
+
   class VisualizerPass
     constructor: (@v, @p) ->
       @cx = @v.outer_left + @v.outer_size / 2
       @cy = @v.outer_top + @v.outer_size / 2
       @inner_radius = @v.inner_size / 2
       @outer_radius = @v.outer_size / 2
+      [@width, @height] = [@v.$el.width(), @v.$el.height()]
+      @radius_limit = Math.sqrt(@width * @width + @height * @height) / 2
       @init?()
+      @kernels = new KernelCache()
 
     draw_circle: (color, alpha, radius) ->
+      if radius > @radius_limit
+        #console.log radius
+        return
       @p.noFill()
       @p.stroke @p.color(color, alpha)
       @p.ellipse @cx, @cy, radius * 2, radius * 2
+
+    draw_blur_circle: (color, alpha, radius) ->
+      if radius > @radius_limit
+        #console.log radius
+        return
+      K = @kernels.get alpha
+      @draw_circle color, alpha * K[0], radius
+      for d in [1..K.length - 1]
+        @draw_circle color, alpha * K[d], radius - d
+        @draw_circle color, alpha * K[d], radius + d
 
     # Draw circular bin
     # @param color {Number} Color
@@ -51,7 +93,10 @@ define (require, exports, module) ->
       if @volumes.length > 255
         @volumes.shift()
       for vol, i in @volumes
-        @draw_circle colors[0], i * 0.1, @outer_radius + vol / 2
+        alpha = vol * i / 255
+        radius = @outer_radius + vol / 2
+        @draw_blur_circle colors[0], alpha, radius
+        @volumes[i] = vol + 10
       @draw_circle colors[4], 255, @outer_radius + volume / 2
 
   class SpectrumPass extends VisualizerPass

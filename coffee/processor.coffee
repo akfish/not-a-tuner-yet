@@ -71,9 +71,9 @@ define (require, exports, module) ->
           i++
         D[j] = sum / count
         j++
-      while j < n
-        D[j] = 1
-        j++
+      # while j < n
+      #   D[j] = 1
+      #   j++
 
       return D
 

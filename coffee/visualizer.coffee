@@ -26,7 +26,7 @@ define (require, exports, module) ->
             v.outer_top + v.outer_size / 2,
             v.outer_size + delta, v.outer_size + delta
 
-        calculate_bin_centers = (bins) ->
+        calculate_bin_centers = (bins, max = 255) ->
           # Cached
           cx = v.inner_left + v.inner_size / 2
           cy = v.inner_top + v.inner_size / 2
@@ -35,7 +35,7 @@ define (require, exports, module) ->
           arc_step = Math.PI / bins.length
           bin_centers = []
           for bin, i in bins
-            len = max_len * bin / 255
+            len = max_len * bin / max
             r = base_radius + len / 2# + max_len / 2
             theta = i * arc_step + Math.PI
             x = cx + p.cos(theta) * r
@@ -44,6 +44,7 @@ define (require, exports, module) ->
               x: x
               y: y
               t: theta
+              len: len
           return bin_centers
 
         visualize_volume = ->
@@ -75,22 +76,15 @@ define (require, exports, module) ->
             console.log "Init max_bins"
             max_bins = []
           centers = calculate_bin_centers bins
-          max_len = (v.outer_size - v.inner_size) / 2
-          w = v.inner_size * Math.PI / 2 / bins.length
-          cx = v.inner_left + v.inner_size / 2
-          cy = v.inner_top + v.inner_size / 2
 
-          color = p.color colors[0], 128#i / bins.length * 255
-          p.fill color
-          p.stroke color
+          w = v.inner_size * Math.PI / 2 / bins.length
           for c, i in centers
             bin = bins[i]
             max_bin = max_bins[i]
-            len = max_len / 255 * bin
-            #console.log max_bin
+            len = c.len
             if max_bin? and max_bin.len > len and max_bin.alpha > 0
-              #if max_bin.len > 1
-              draw_cirular_bin colors[3], max_bin.alpha, max_bin.c, w, max_bin.len
+              if max_bin.len > 1
+                draw_cirular_bin colors[3], max_bin.alpha, max_bin.c, w, max_bin.len
               max_bin.alpha -= 1
             else
               new_max_bin =
@@ -98,10 +92,21 @@ define (require, exports, module) ->
                 c: c
                 len: len
               max_bins[i] = new_max_bin
-              #console.log new_max_bin
             if len > 1
               draw_cirular_bin colors[0], 128, c, w, len
 
+          if not v.processor? or not v.processor.ready
+            return
+
+          hps_bins = v.processor.HPS
+          hps_max = v.processor.HPS_MAX
+          hps_centers = calculate_bin_centers hps_bins, hps_max
+          #console.log hps_max
+          for c, i in hps_centers
+            bin = bins[i]
+            len = c.len
+            if len > 1
+              draw_cirular_bin colors[1], 128, c, w, len
         p.setup = ->
           p.size v.$el.width(), v.$el.height()
           p.frameRate 60

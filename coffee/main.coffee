@@ -19,8 +19,8 @@ define (require, exports, module) ->
 
     processor = new Processor()
     #processor.use_audio "/audio/nocturne_with_no_moon.mp3"
-    processor.use_audio "/audio/Guitar_Standard_Tuning.ogg"
-
+    #processor.use_audio "/audio/Guitar_Standard_Tuning.ogg"
+    processor.use_mic()
     $("#show-content").click ->
       scroll_to '#content', true
 

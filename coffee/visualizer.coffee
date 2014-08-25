@@ -102,7 +102,7 @@ define (require, exports, module) ->
   class SpectrumPass extends VisualizerPass
     init: ->
       @max_bins = []
-      @min_hz = 50
+      @min_hz = 60
       @max_hz = 10000
 
     get_spectrum: ->

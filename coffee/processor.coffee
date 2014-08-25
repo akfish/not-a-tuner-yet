@@ -8,9 +8,10 @@ define (require, exports, module) ->
   class Processor
     @is_valid: ->
       window.AudioContext ?= window.webkitAudioContext
-      return window.AudioContext?
+      navigator.getUserMedia ?= navigator.webkitGetUserMedia
+      return window.AudioContext? and navigator.getUserMedia?
 
-    use_audio: (url) ->
+    use_audio: (url, callback) ->
       @source = @context.createBufferSource()
 
       @source.connect @analyser
@@ -20,18 +21,33 @@ define (require, exports, module) ->
       xhr.onload = =>
         that = @
         @context.decodeAudioData xhr.response, ((b) ->
-          console.log "Audio loaded: #{url}"
+          console.log "Audio loaded: #{url}, Sample rate: #{that.context.sampleRate}Hz"
           that.audio_buffer = b
           that.source.buffer = b
           that.source.loop = true
           that.source.start 0.0
           that.ready = true
+          callback?()
           ), (err) ->
-            console.error("Fail to load audio: #{url}")
+            console.error "Fail to load audio: #{url}"
+            callback? err
       xhr.open "GET", url, true
       xhr.responseType = 'arraybuffer'
       xhr.send()
-    use_mic: ->
+
+    use_mic: (callback) ->
+
+      navigator.getUserMedia audio: true, ((stream) =>
+        @source = @context.createMediaStreamSource stream
+
+        @source.connect @analyser
+        @analyser.connect @context.destination
+        @ready = true
+        console.log "Microphone open. Sample rate: #{@context.sampleRate} Hz"
+        callback?()
+      ), (err) ->
+        console.error "Fail to access microphone: #{err}"
+        callback? err
 
     _process: ->
       @frequency_bin_count = n = @analyser.frequencyBinCount

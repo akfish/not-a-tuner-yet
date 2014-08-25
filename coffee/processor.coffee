@@ -90,12 +90,19 @@ define (require, exports, module) ->
 
       return D
 
+    get_bin_index: (hz) ->
+      if @frequency_bin_count == 0
+        return 0
+      hz_per_bin = @context.sampleRate / @frequency_bin_count
+      return Math.floor hz / hz_per_bin
+
     constructor: (opts) ->
       console.log @_downsample [0..10], 2
       console.log @_downsample [0..10], 3
       console.log @_downsample [0..10], 4
       console.log @_downsample [0..10], 5
       opts ?= {}
+      @frequency_bin_count = 0
       @opts = _.defaults opts, default_opts
       @context = new AudioContext()
       @analyser = @context.createAnalyser()

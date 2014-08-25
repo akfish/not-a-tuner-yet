@@ -102,20 +102,27 @@ define (require, exports, module) ->
   class SpectrumPass extends VisualizerPass
     init: ->
       @max_bins = []
+      @min_hz = 50
+      @max_hz = 10000
 
     get_spectrum: ->
       if not @v.processor or not @v.processor.ready
         return []
         #return _.map([0..128 - 1], (n) -> (1 + p.sin(n + p.frameCount)) / 4 * 255)
       else
-        return @v.processor.frequency_bins
+        @start_bin = @v.processor.get_bin_index @min_hz
+        @end_bin = @v.processor.get_bin_index @max_hz
+        bins = @v.processor.frequency_bins
+        return _.map [@start_bin..@end_bin], (i) -> bins[i]
+        #return @v.processor.frequency_bins#[start..end]
 
     calculate_bin_centers: (bins, max = 255) ->
       # cx = v.inner_left + v.inner_size / 2
       # cy = v.inner_top + v.inner_size / 2
       # base_radius = v.inner_size / 2
+      #console.log bins.length
       max_len = (@v.outer_size - @v.inner_size)# / 2
-      arc_step = Math.PI / bins.length
+      arc_step = 2 * Math.PI / bins.length
       bin_centers = []
       for bin, i in bins
         len = max_len * bin / max
@@ -159,7 +166,7 @@ define (require, exports, module) ->
       if not @v.processor? or not @v.processor.ready
         return
 
-      hps_bins = @v.processor.HPS
+      hps_bins = @v.processor.HPS[@start_bin..@end_bin]
       hps_max = @v.processor.HPS_MAX
       hps_centers = @calculate_bin_centers hps_bins, hps_max
       #console.log hps_max

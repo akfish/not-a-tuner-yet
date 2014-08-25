@@ -95,7 +95,7 @@ define (require, exports, module) ->
       for vol, i in @volumes
         alpha = vol * i / 255
         radius = @outer_radius + vol / 2
-        @draw_blur_circle colors[0], alpha, radius
+        @draw_blur_circle colors[3], alpha, radius
         @volumes[i] = vol + 10
       @draw_circle colors[4], 255, @outer_radius + volume / 2
 

@@ -47,14 +47,27 @@ define (require, exports, module) ->
       arr_5 = @_downsample arr, 5
       @HPS = []
       @HPS_MAX = 0
+      max_downsample = 5
+      max_i = 0
       for i in [0..n - 1]
-        if i < 50
+        if i < 0
           value = 0
         else
-          value = arr[i] * arr_2[i] * arr_3[i] * arr_4[i] * arr_5[i]
+          # In place down sampling
+          value = i
+          for f in [2..max_downsample]
+            b = arr[i * f] ? 0
+            value *= b
+          #value = arr[i] * arr_2[i] * arr_3[i] * arr_4[i] * arr_5[i]
           #hvalue = Math.log value
         @HPS_MAX = Math.max(value, @HPS_MAX)
+        if @HPS_MAX == value
+          max_i = i
         @HPS.push value
+
+      max_hz = @context.sampleRate / n * max_i
+      if max_hz < 4400
+        document.title = "Peak: #{max_hz} Hz"
 
     _downsample: (N, factor) ->
       n = N.length

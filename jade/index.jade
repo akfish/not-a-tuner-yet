@@ -22,7 +22,21 @@ html
       #wave
         canvas
       #inner-circle
+        //- #info
+        //-   #cat
     #bottom-control
-      a(id='show-content')
-        i.fa.fa-angle-down.fa-5
+      #info
+        p#status Loading
+        #buttons
+          i#play-button.button.fa.fa-play.fa-6
+          i#pause-button.button.fa.fa-pause.fa-6
+          i#loading-icon.icon.fa.fa-spinner.fa-6
+          i#warning-icon.icon.fa.fa-warning.fa-6
+      p#modes
+        //| Drag a music file here or&nbsp;
+        a#use-mic(href='#') use mic
+        | &nbsp|&nbsp
+        a.active#use-sample(href='#') use sample
+      //a(id='show-content')
+        //i.fa.fa-angle-down.fa-5
     #content

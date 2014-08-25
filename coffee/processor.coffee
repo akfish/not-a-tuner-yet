@@ -11,11 +11,64 @@ define (require, exports, module) ->
       navigator.getUserMedia ?= navigator.webkitGetUserMedia
       return window.AudioContext? and navigator.getUserMedia?
 
-    use_audio: (url, callback) ->
+    stop: ->
+      switch @mode
+        when 'AUDIO'
+          @source.stop()
+        when 'MIC'
+          @mic_stream.stop()
+
+      @source.disconnect()
+      @analyser.disconnect()
+
+    pause: ->
+      switch @mode
+        when 'AUDIO' then @_pause_audio()
+        when 'MIC'   then @_pause_mic()
+      #@source.stop()
+      #@audio_pos = context.currentTime - @start_time
+
+    resume: ->
+      switch @mode
+        when 'AUDIO' then @_resume_audio()
+        when 'MIC'   then @_resume_mic()
+      #@source =
+
+    _pause_audio: ->
+      @source.stop()
+      @audio_pos = @context.currentTime - @start_time
+
+      @source.disconnect()
+      @analyser.disconnect()
+
+    _resume_audio: ->
       @source = @context.createBufferSource()
 
       @source.connect @analyser
       @analyser.connect @context.destination
+
+      @source.buffer = @audio_buffer
+      @source.loop = true
+      @source.start 0.0, @audio_pos % @audio_buffer.duration
+      @start_time = @context.currentTime
+
+    _pause_mic: ->
+      @stop()
+      
+    _resume_mic: ->
+      @use_mic()
+
+    use_audio: (url, callback) ->
+      if @audio_buffer?
+        @_resume_audio()
+        callback?()
+        return
+      @source = @context.createBufferSource()
+
+      @source.connect @analyser
+      @analyser.connect @context.destination
+      @mode = 'AUDIO'
+      @audio_pos = 0
 
       xhr = new XMLHttpRequest()
       xhr.onload = =>
@@ -26,28 +79,36 @@ define (require, exports, module) ->
           that.source.buffer = b
           that.source.loop = true
           that.source.start 0.0
+          that.start_time = that.context.currentTime
           that.ready = true
           callback?()
           ), (err) ->
             console.error "Fail to load audio: #{url}"
+            if not err?
+              err = 'Fail to load audio'
             callback? err
+            return
       xhr.open "GET", url, true
       xhr.responseType = 'arraybuffer'
       xhr.send()
 
     use_mic: (callback) ->
-
+      @mode = 'MIC'
       navigator.getUserMedia audio: true, ((stream) =>
         @source = @context.createMediaStreamSource stream
-
+        @mic_stream = stream
         @source.connect @analyser
         @analyser.connect @context.destination
         @ready = true
         console.log "Microphone open. Sample rate: #{@context.sampleRate} Hz"
         callback?()
+        return
       ), (err) ->
         console.error "Fail to access microphone: #{err}"
+        if not err?
+          err = "Fail to access microphone"
         callback? err
+        return
 
     _process: ->
       @frequency_bin_count = n = @analyser.frequencyBinCount

@@ -12,6 +12,25 @@
 @text-color-invert: #f2f2f2;
 // Consts
 @phi: 0.618;
+// Animation
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+    from {transform:rotate(0deg);}
+    to {transform:rotate(360deg);}
+}
+
+.animate(@ani: spin, @duration: 4s) {
+  -webkit-animation:@ani @duration linear infinite;
+  -moz-animation:@ani @duration linear infinite;
+  animation:@ani @duration linear infinite;
+}
 
 html, body {
   overflow: hidden;
@@ -85,10 +104,25 @@ html, body {
     .drop-shadow(@spread: 1px, @blur: 10px);
     .semi-circle-at-bottom-center(@phi);
     background-color: @c3;
+
+    #info {
+      position: absolute;
+      border: 1px solid;
+      width: 100%;
+      height: 50%;
+
+      #cat {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: url('../image/cat-sili.png') no-repeat;
+      }
+    }
   }
 }
 
 #bottom-control {
+  //visibility: hidden;
   z-index: 5;
   position: absolute;
   width: 100%;
@@ -96,8 +130,37 @@ html, body {
   font-size: 3em;
   text-align: center;
   color: @text-color-light;
+  p {
+    font-size: 24px;
+    margin: 5px;
+  }
   a {
     color: @text-color-light;
+  }
+  .active {
+    text-decoration: none;
+    font-weight: 200;
+  }
+  #modes {
+    visibility: hidden;
+  }
+  #info{
+    margin-bottom: 80px;
+    #buttons {
+      .icon {
+        display: none;
+      }
+      .button {
+        display: none;
+      }
+      .button:hover {
+        .drop-shadow(@spread: 1px, @blur: 10px);
+        cursor: pointer;
+      }
+      #loading-icon {
+        .animate()
+      }
+    }
   }
 }
 

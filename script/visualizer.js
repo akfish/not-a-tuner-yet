@@ -153,12 +153,13 @@ define(function(require, exports, module) {
 
     SpectrumPass.prototype.init = function() {
       this.max_bins = [];
-      this.min_hz = 80;
+      this.min_hz = 100;
       this.max_hz = 10000;
       this.max_value = 255;
       this.track_history = true;
       this.history_color = colors[3];
-      return this.current_color = colors[0];
+      this.current_color = colors[0];
+      return this.angle_offset = Math.PI / 100;
     };
 
     SpectrumPass.prototype.get_spectrum = function() {
@@ -183,10 +184,13 @@ define(function(require, exports, module) {
       return this.v.processor.frequency_bins;
     };
 
-    SpectrumPass.prototype.calculate_bin_centers = function(bins, max) {
+    SpectrumPass.prototype.calculate_bin_centers = function(bins, max, offset) {
       var arc_step, bin, bin_centers, cos_t, i, inner_x, inner_y, len, max_len, outer_x, outer_y, r, sin_t, theta, x, y, _i, _len;
       if (max == null) {
         max = 255;
+      }
+      if (offset == null) {
+        offset = 0;
       }
       max_len = this.v.outer_size - this.v.inner_size;
       arc_step = 2 * Math.PI / bins.length;
@@ -195,7 +199,7 @@ define(function(require, exports, module) {
         bin = bins[i];
         len = max_len * bin / max;
         r = this.inner_radius + len / 2;
-        theta = i * arc_step + Math.PI;
+        theta = i * arc_step + Math.PI + offset;
         sin_t = this.p.sin(theta);
         cos_t = this.p.cos(theta);
         x = this.cx + cos_t * r;
@@ -227,7 +231,7 @@ define(function(require, exports, module) {
       if (this.max_bins.length !== bins.length) {
         this.max_bins = [];
       }
-      centers = this.calculate_bin_centers(bins, this.max_value);
+      centers = this.calculate_bin_centers(bins, this.max_value, this.angle_offset);
       w = this.v.inner_size * Math.PI / 2 / bins.length;
       for (i = _i = 0, _len = centers.length; _i < _len; i = ++_i) {
         c = centers[i];

@@ -104,6 +104,10 @@ define (require, exports, module) ->
       @max_bins = []
       @min_hz = 60
       @max_hz = 10000
+      @max_value = 255
+      @track_history = true
+      @history_color = colors[3]
+      @current_color = colors[0]
 
     get_spectrum: ->
       if not @v.processor or not @v.processor.ready
@@ -112,15 +116,14 @@ define (require, exports, module) ->
       else
         @start_bin = @v.processor.get_bin_index @min_hz
         @end_bin = @v.processor.get_bin_index @max_hz
-        bins = @v.processor.frequency_bins
+        bins = @_do_get_spectrum()
         return _.map [@start_bin..@end_bin], (i) -> bins[i]
         #return @v.processor.frequency_bins#[start..end]
 
+    _do_get_spectrum: ->
+      return @v.processor.frequency_bins
+
     calculate_bin_centers: (bins, max = 255) ->
-      # cx = v.inner_left + v.inner_size / 2
-      # cy = v.inner_top + v.inner_size / 2
-      # base_radius = v.inner_size / 2
-      #console.log bins.length
       max_len = (@v.outer_size - @v.inner_size)# / 2
       arc_step = 2 * Math.PI / bins.length
       bin_centers = []
@@ -143,7 +146,7 @@ define (require, exports, module) ->
         return
       if @max_bins.length != bins.length
         @max_bins = []
-      centers = @calculate_bin_centers bins
+      centers = @calculate_bin_centers bins, @max_value
 
       w = @v.inner_size * Math.PI / 2 / bins.length
       for c, i in centers
@@ -151,8 +154,8 @@ define (require, exports, module) ->
         max_bin = @max_bins[i]
         len = c.len
         if max_bin? and max_bin.len > len and max_bin.alpha > 0
-          if max_bin.len > 1
-            @draw_cirular_bin colors[3], max_bin.alpha, max_bin.c, w, max_bin.len
+          if max_bin.len > 1 and @track_history
+            @draw_cirular_bin @history_color, max_bin.alpha, max_bin.c, w, max_bin.len
           max_bin.alpha -= 1
         else
           new_max_bin =
@@ -161,26 +164,23 @@ define (require, exports, module) ->
             len: len
           @max_bins[i] = new_max_bin
         if len > 1
-          @draw_cirular_bin colors[0], 128, c, w, len
+          @draw_cirular_bin @current_color, 128, c, w, len
 
-      if not @v.processor? or not @v.processor.ready
-        return
-
-      hps_bins = @v.processor.HPS[@start_bin..@end_bin]
-      hps_max = @v.processor.HPS_MAX
-      hps_centers = @calculate_bin_centers hps_bins, hps_max
-      #console.log hps_max
-      for c, i in hps_centers
-        bin = bins[i]
-        len = c.len
-        if len > 1
-          @draw_cirular_bin colors[1], 128, c, w, len
+  class HpsPass extends SpectrumPass
+    init: ->
+      super()
+      @current_color = colors[1]
+      @track_history = false
+    _do_get_spectrum: ->
+      @max_value = @v.processor.HPS_MAX
+      return @v.processor.HPS
 
   class Visualizer
     make_proc: (v) ->
       (p) ->
         volume_pass = new VolumePass(v, p)
         spectrum_pass= new SpectrumPass(v, p)
+        hps_pass = new HpsPass(v, p)
 
         p.setup = ->
           p.size v.$el.width(), v.$el.height()
@@ -192,6 +192,7 @@ define (require, exports, module) ->
           p.smooth()
           volume_pass.draw()
           spectrum_pass.draw()
+          hps_pass.draw()
         return
 
     constructor: (@$el, @inner_circle, @outer_circle) ->

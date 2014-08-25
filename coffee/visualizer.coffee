@@ -102,7 +102,7 @@ define (require, exports, module) ->
   class SpectrumPass extends VisualizerPass
     init: ->
       @max_bins = []
-      @min_hz = 60
+      @min_hz = 80
       @max_hz = 10000
       @max_value = 255
       @track_history = true
@@ -131,11 +131,21 @@ define (require, exports, module) ->
         len = max_len * bin / max
         r = @inner_radius + len / 2# + max_len / 2
         theta = i * arc_step + Math.PI
-        x = @cx + @p.cos(theta) * r
-        y = @cy + @p.sin(theta) * r
+        sin_t = @p.sin(theta)
+        cos_t = @p.cos(theta)
+        x = @cx + cos_t * r
+        y = @cy + sin_t * r
+        outer_x = @cx + cos_t * @outer_radius
+        outer_y = @cy + sin_t * @outer_radius
+        inner_x = @cx + cos_t * @inner_radius
+        inner_y = @cy + sin_t * @inner_radius
         bin_centers.push
           x: x
           y: y
+          outer_x: outer_x
+          outer_y: outer_y
+          inner_x: inner_x
+          inner_y: inner_y
           t: theta
           len: len
       return bin_centers
@@ -166,14 +176,98 @@ define (require, exports, module) ->
         if len > 1
           @draw_cirular_bin @current_color, 128, c, w, len
 
+      @post_draw? bins, centers
+
   class HpsPass extends SpectrumPass
     init: ->
       super()
       @current_color = colors[1]
       @track_history = false
+      @max_blob_radius = 32
+      @init_blob_alpha = 128
+      @current_blob_color = colors[0]
+      @history_blob_color = colors[0]
+      @blobs = []
+      @max_blobs_per_index = 8
+      @blob_count = {}
+      @blob_recent = {}
+      @max_random_movement = 20
+
     _do_get_spectrum: ->
       @max_value = @v.processor.HPS_MAX
       return @v.processor.HPS
+
+    _draw_blob: (x, y, r, color, alpha) ->
+      c = @p.color color, alpha
+      @p.stroke c
+      @p.fill c
+      @p.ellipse x, y, r * 2, r * 2
+
+    post_draw: (bins, centers) ->
+      # Visulize HPS peeks
+      threshold = @max_value * 0.3
+      peeks = []
+      for bin, i in bins
+        # Hacky way to surpress 90% of low frequency peeks
+        if i < 10 and Math.random() > 0.9
+          continue
+        if bin > threshold
+          peeks.push
+            bin: bin
+            index: i
+
+      # Draw them as 'blobs'
+      # Old blobs first
+      n = @blobs.length
+      i = 0
+      while i < n
+        blob = @blobs.shift()
+        i++
+        # Discard old blobs
+        if blob.alpha <= 0
+          @blob_count[blob.index]--
+          continue
+        alpha = blob.alpha
+        radius = blob.r
+        # 'Punish' hotspots
+        if @blob_count[blob.index] > 2
+          blob.alpha /= @blob_count[blob.index]
+          blob.r *= @blob_count[blob.index] * 0.3
+        # draw
+        @_draw_blob blob.x, blob.y, blob.r, @history_blob_color, blob.alpha
+        # Update
+        blob.alpha -= 1
+        blob.r += 1
+        if @blob_recent[blob.index] < blob.alpha
+          @blob_recent[blob.index] = blob.alpha
+        @blobs.push blob
+
+      for peek in peeks
+        c = centers[peek.index]
+        r = @max_blob_radius * peek.bin / @max_value
+        if not @blob_count[peek.index]?
+          @blob_count[peek.index] = 0
+        # Discard if there're too many blobs at the same spot
+        if @blob_count[peek.index] > @max_blobs_per_index
+          continue
+        # Discard if there're recent blob
+        if @init_blob_alpha - @blob_recent[peek.index] < 3 and @blob_count[peek.index] > 0
+          continue
+        blob =
+          index: peek.index
+          x: c.outer_x + Math.random() * @max_random_movement
+          y: c.outer_y + Math.random() * @max_random_movement
+          r: r
+          alpha: @init_blob_alpha
+
+        @blob_recent[blob.index] = @init_blob_alpha
+        # 'Punish' hotspots
+        if @blob_count[blob.index] > 2
+          blob.alpha /= @blob_count[blob.index]
+          blob.r *= @blob_count[blob.index] * 0.3
+        @_draw_blob blob.x, blob.y, blob.r, @current_blob_color, blob.alpha
+        @blobs.push blob
+        @blob_count[peek.index]++
 
   class Visualizer
     make_proc: (v) ->

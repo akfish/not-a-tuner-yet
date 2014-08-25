@@ -18,9 +18,9 @@ define (require, exports, module) ->
     console.log Processor.is_valid()
 
     processor = new Processor()
-    #processor.use_audio "/audio/nocturne_with_no_moon.mp3"
-    processor.use_audio "/audio/playing_love.mp3"
-    #processor.use_audio "/audio/Guitar_Standard_Tuning.ogg"
+    #processor.use_audio location.pathname + "/audio/nocturne_with_no_moon.mp3"
+    processor.use_audio location.pathname + "audio/playing_love.mp3"
+    #processor.use_audio location.pathname + "/audio/Guitar_Standard_Tuning.ogg"
     #processor.use_mic()
     $("#show-content").click ->
       scroll_to '#content', true

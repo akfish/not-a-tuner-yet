@@ -102,12 +102,13 @@ define (require, exports, module) ->
   class SpectrumPass extends VisualizerPass
     init: ->
       @max_bins = []
-      @min_hz = 80
+      @min_hz = 100
       @max_hz = 10000
       @max_value = 255
       @track_history = true
       @history_color = colors[3]
       @current_color = colors[0]
+      @angle_offset = Math.PI / 100
 
     get_spectrum: ->
       if not @v.processor or not @v.processor.ready
@@ -123,14 +124,14 @@ define (require, exports, module) ->
     _do_get_spectrum: ->
       return @v.processor.frequency_bins
 
-    calculate_bin_centers: (bins, max = 255) ->
+    calculate_bin_centers: (bins, max = 255, offset = 0) ->
       max_len = (@v.outer_size - @v.inner_size)# / 2
       arc_step = 2 * Math.PI / bins.length
       bin_centers = []
       for bin, i in bins
         len = max_len * bin / max
         r = @inner_radius + len / 2# + max_len / 2
-        theta = i * arc_step + Math.PI
+        theta = i * arc_step + Math.PI + offset
         sin_t = @p.sin(theta)
         cos_t = @p.cos(theta)
         x = @cx + cos_t * r
@@ -156,7 +157,7 @@ define (require, exports, module) ->
         return
       if @max_bins.length != bins.length
         @max_bins = []
-      centers = @calculate_bin_centers bins, @max_value
+      centers = @calculate_bin_centers bins, @max_value, @angle_offset
 
       w = @v.inner_size * Math.PI / 2 / bins.length
       for c, i in centers

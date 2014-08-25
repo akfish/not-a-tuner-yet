@@ -8,7 +8,7 @@ define (require, exports, module) ->
   class Processor
     @is_valid: ->
       window.AudioContext ?= window.webkitAudioContext
-      navigator.getUserMedia ?= (navigator.webkitGetUserMedia | navigator.mozGetUserMedia)
+      navigator.getUserMedia ?= (navigator.webkitGetUserMedia || navigator.mozGetUserMedia)
       return window.AudioContext? and navigator.getUserMedia?
 
     stop: ->

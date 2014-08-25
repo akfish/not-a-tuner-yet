@@ -26,7 +26,7 @@ define(function(require, exports, module) {
     Processor = require('./processor');
     console.log(Processor.is_valid());
     processor = new Processor();
-    processor.use_audio("/audio/playing_love.mp3");
+    processor.use_audio(location.pathname + "audio/playing_love.mp3");
     $("#show-content").click(function() {
       return scroll_to('#content', true);
     });

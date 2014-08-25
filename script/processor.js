@@ -11,16 +11,80 @@ define(function(require, exports, module) {
         window.AudioContext = window.webkitAudioContext;
       }
       if (navigator.getUserMedia == null) {
-        navigator.getUserMedia = navigator.webkitGetUserMedia;
+        navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
       }
       return (window.AudioContext != null) && (navigator.getUserMedia != null);
     };
 
-    Processor.prototype.use_audio = function(url, callback) {
-      var xhr;
+    Processor.prototype.stop = function() {
+      switch (this.mode) {
+        case 'AUDIO':
+          this.source.stop();
+          break;
+        case 'MIC':
+          this.mic_stream.stop();
+      }
+      this.source.disconnect();
+      return this.analyser.disconnect();
+    };
+
+    Processor.prototype.pause = function() {
+      switch (this.mode) {
+        case 'AUDIO':
+          return this._pause_audio();
+        case 'MIC':
+          return this._pause_mic();
+      }
+    };
+
+    Processor.prototype.resume = function() {
+      switch (this.mode) {
+        case 'AUDIO':
+          return this._resume_audio();
+        case 'MIC':
+          return this._resume_mic();
+      }
+    };
+
+    Processor.prototype._pause_audio = function() {
+      this.source.stop();
+      this.audio_pos = this.context.currentTime - this.start_time;
+      this.source.disconnect();
+      return this.analyser.disconnect();
+    };
+
+    Processor.prototype._resume_audio = function() {
       this.source = this.context.createBufferSource();
       this.source.connect(this.analyser);
       this.analyser.connect(this.context.destination);
+      this.source.buffer = this.audio_buffer;
+      this.source.loop = true;
+      this.source.start(0.0, this.audio_pos % this.audio_buffer.duration);
+      return this.start_time = this.context.currentTime;
+    };
+
+    Processor.prototype._pause_mic = function() {
+      return this.stop();
+    };
+
+    Processor.prototype._resume_mic = function() {
+      return this.use_mic();
+    };
+
+    Processor.prototype.use_audio = function(url, callback) {
+      var xhr;
+      if (this.audio_buffer != null) {
+        this._resume_audio();
+        if (typeof callback === "function") {
+          callback();
+        }
+        return;
+      }
+      this.source = this.context.createBufferSource();
+      this.source.connect(this.analyser);
+      this.analyser.connect(this.context.destination);
+      this.mode = 'AUDIO';
+      this.audio_pos = 0;
       xhr = new XMLHttpRequest();
       xhr.onload = (function(_this) {
         return function() {
@@ -32,11 +96,17 @@ define(function(require, exports, module) {
             that.source.buffer = b;
             that.source.loop = true;
             that.source.start(0.0);
+            that.start_time = that.context.currentTime;
             that.ready = true;
             return typeof callback === "function" ? callback() : void 0;
           }), function(err) {
             console.error("Fail to load audio: " + url);
-            return typeof callback === "function" ? callback(err) : void 0;
+            if (err == null) {
+              err = 'Fail to load audio';
+            }
+            if (typeof callback === "function") {
+              callback(err);
+            }
           });
         };
       })(this);
@@ -46,20 +116,29 @@ define(function(require, exports, module) {
     };
 
     Processor.prototype.use_mic = function(callback) {
+      this.mode = 'MIC';
       return navigator.getUserMedia({
         audio: true
       }, ((function(_this) {
         return function(stream) {
           _this.source = _this.context.createMediaStreamSource(stream);
+          _this.mic_stream = stream;
           _this.source.connect(_this.analyser);
           _this.analyser.connect(_this.context.destination);
           _this.ready = true;
           console.log("Microphone open. Sample rate: " + _this.context.sampleRate + " Hz");
-          return typeof callback === "function" ? callback() : void 0;
+          if (typeof callback === "function") {
+            callback();
+          }
         };
       })(this)), function(err) {
         console.error("Fail to access microphone: " + err);
-        return typeof callback === "function" ? callback(err) : void 0;
+        if (err == null) {
+          err = "Fail to access microphone";
+        }
+        if (typeof callback === "function") {
+          callback(err);
+        }
       });
     };
 

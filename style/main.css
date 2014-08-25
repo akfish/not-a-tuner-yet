@@ -1,3 +1,27 @@
+@-moz-keyframes spin {
+  from {
+    -moz-transform: rotate(0deg);
+  }
+  to {
+    -moz-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 html,
 body {
   overflow: hidden;
@@ -6,6 +30,7 @@ body {
   width: 100%;
   height: 100%;
   background-color: #1b3647;
+  font-family: 'Aldrich', sans-serif;
 }
 #main {
   position: absolute;
@@ -65,6 +90,32 @@ body {
   border-radius: 50%;
   background-color: #1691be;
 }
+#visualizer #inner-circle #info {
+  position: absolute;
+  border: 1px solid;
+  width: 100%;
+  height: 50%;
+}
+#visualizer #inner-circle #info #cat {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: url('../image/cat-sili.png') no-repeat;
+}
+#links {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 5;
+  color: #ceccc6;
+  font-size: 36px;
+  opacity: 0.3;
+  margin: 3px;
+}
+#links a {
+  color: #ceccc6;
+  margin: 5px;
+}
 #bottom-control {
   z-index: 5;
   position: absolute;
@@ -74,8 +125,39 @@ body {
   text-align: center;
   color: #ceccc6;
 }
+#bottom-control p {
+  font-size: 24px;
+  margin: 5px;
+}
 #bottom-control a {
   color: #ceccc6;
+}
+#bottom-control .active {
+  text-decoration: none;
+  font-weight: 200;
+}
+#bottom-control #modes {
+  visibility: hidden;
+}
+#bottom-control #info {
+  margin-bottom: 80px;
+}
+#bottom-control #info #buttons .icon {
+  display: none;
+}
+#bottom-control #info #buttons .button {
+  display: none;
+}
+#bottom-control #info #buttons .button:hover {
+  -webkit-box-shadow: 0 1px 10px 1px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: 0 1px 10px 1px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 10px 1px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+#bottom-control #info #buttons #loading-icon {
+  -webkit-animation: spin 4s linear infinite;
+  -moz-animation: spin 4s linear infinite;
+  animation: spin 4s linear infinite;
 }
 #content {
   position: absolute;
